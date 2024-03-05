@@ -43,13 +43,19 @@ def benford_test_file():
 
     if status == 200:
         filename = f'{UPLOAD_FOLDER}{file.filename}'
-        column = request.args.get('column')
-        data = Utils.extract_csv_values(filename, column)
-        values = Utils.extract_first_digits(data)
-        actual_percentages = Utils.get_digit_percentages(values)
-        expected_percentages = Utils.get_expected_percentages()
-        p_value = Utils.get_p_value(values)
-        return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value})
+        column = request.form.get('column')
+
+        try:
+            data = Utils.extract_csv_values(filename, column)
+            values = Utils.extract_first_digits(data)
+            actual_percentages = Utils.get_digit_percentages(values)
+            expected_percentages = Utils.get_expected_percentages()
+            p_value = Utils.get_p_value(values)
+            os.remove(filename)  # delete file
+            return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value})
+        except Exception:
+            os.remove(filename)  # delete file
+            return jsonify({'error': 'Invalid column name or values'})
 
 
 @app.route("/api/benford_test/")
