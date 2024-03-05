@@ -20,6 +20,18 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def upload_file(file):
+    """Uploads file to the uploads folder"""
+    if file and allowed_file(file.filename):
+        filename = file.filename
+        print(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        print('file saved successfully')
+        return 200  # File saved successfully
+    else:
+        return 400  # Invalid file type
+
+
 @app.route("/api/benford_test/upload/", methods=['GET', 'POST'])
 def benford_test_file():
     """Get expected and actual values"""
@@ -27,17 +39,17 @@ def benford_test_file():
         return 'No file part'
 
     file = request.files['file']
+    status = upload_file(file)  # upload file and return status of upload
 
-    if file.filename == '':
-        return 'No selected file'
-
-    if file and allowed_file(file.filename):
-        filename = file.filename
-        print(filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return 'File uploaded successfully'
-    else:
-        return jsonify({'error': 'Invalid file type'}), 400
+    if status == 200:
+        filename = f'{UPLOAD_FOLDER}{file.filename}'
+        column = request.args.get('column')
+        data = Utils.extract_csv_values(filename, column)
+        values = Utils.extract_first_digits(data)
+        actual_percentages = Utils.get_digit_percentages(values)
+        expected_percentages = Utils.get_expected_percentages()
+        p_value = Utils.get_p_value(values)
+        return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value})
 
 
 @app.route("/api/benford_test/")
