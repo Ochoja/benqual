@@ -7,7 +7,7 @@ from api.utils import Utils
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = './api/uploads/'
+UPLOAD_FOLDER = './'
 ALLOWED_EXTENSIONS = {'csv'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
