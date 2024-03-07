@@ -32,7 +32,7 @@ def upload_file(file):
         return 400  # Invalid file type
 
 
-@app.route("/api/benford_test/upload/", methods=['GET', 'POST'])
+@app.route("/api/benford_test/upload/", methods=['POST'])
 def benford_test_file():
     """Get expected and actual values"""
     if 'file' not in request.files:
