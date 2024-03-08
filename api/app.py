@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 UPLOAD_FOLDER = './'
-ALLOWED_EXTENSIONS = {'csv'}
+ALLOWED_EXTENSIONS = {'csv', 'xls', 'xlsx'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -46,7 +46,12 @@ def benford_test_file():
         column = request.form.get('column')
 
         try:
-            data = Utils.extract_csv_values(filename, column)
+            if filename.endswith('.csv'):
+                data = Utils.extract_csv_values(filename, column)
+            else:
+                print("Excel File")
+                data = Utils.extract_excel_values(filename, column)
+
             values = Utils.extract_first_digits(data)
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()

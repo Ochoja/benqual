@@ -31,6 +31,17 @@ class Utils:
             print("Error converting value", e)
             return None
 
+    def extract_excel_values(self, filename: str, column: str) -> list:
+        """Extract values from a column
+            Save numbers only"""
+        try:
+            df = pd.read_excel(filename)
+            values = pd.to_numeric(df[column], errors='coerce')
+            return values.dropna().astype(int).tolist()
+        except Exception as e:
+            print("Error reading document", e)
+            return None
+
     def compute_first_digit(self, number: int | float) -> int:
         """Compute first digit of number"""
         if type(number) == float:
