@@ -31,11 +31,18 @@ class Utils:
             print("Error converting value", e)
             return None
 
-    def compute_first_digit(self, number: int) -> int:
+    def compute_first_digit(self, number: int | float) -> int:
         """Compute first digit of number"""
-        while number >= 10:
-            number //= 10
-        return number
+        if type(number) == float:
+            number_str = str(abs(number))
+            decimal_index = number_str.find('.')
+            if decimal_index != -1:
+                number_str = number_str[:decimal_index]
+                return int(number_str[0])
+        else:
+            while number >= 10:
+                number //= 10
+            return number
 
     def extract_first_digits(self, data: list[int]) -> list:
         """Extract first digits of data set"""
