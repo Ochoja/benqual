@@ -42,11 +42,12 @@ class Utils:
             print("Error reading document", e)
             return None
 
-    def compute_first_digit(self, number: int | float) -> list:
-        """Compute first digit of number"""
+    def get_number_digits(self, number: int | float) -> list:
+        """Extract each digit of a number into a list"""
         val = str(abs(number))
         valid_digit = []
 
+        # ignore 0 and decimal points
         for i in val:
             if i != '0' and i != '.':
                 valid_digit.append(i)
@@ -54,30 +55,33 @@ class Utils:
         num_pool = [int(i) for i in valid_digit]
         return num_pool
 
-        # if type(number) == float:
-        #     number_str = str(abs(number))
-        #     decimal_index = number_str.find('.')
-        #     if decimal_index != -1:
-        #         number_str = number_str[:decimal_index]
-        #         return int(number_str[0])
-        # else:
-        #     while number >= 10:
-        #         number //= 10
-        #     return number
+    def compute_first_digits(self, number: int | float) -> int:
+        if type(number) == float:
+            number_str = str(abs(number))
+            decimal_index = number_str.find('.')
+            if decimal_index != -1:
+                number_str = number_str[:decimal_index]
+                return int(number_str[0])
+        else:
+            while number >= 10:
+                number //= 10
+            return number
 
-    def extract_first_digits(self, data: list[int | float]) -> list:
-        """Extract first digits of data set"""
+    def get_number_pool(self, data: list[int | float]) -> list:
+        """Create pool of number consisting
+            of every digit of numbers in list"""
         pool = []
 
         for i in data:
-            number_pool = self.compute_first_digit(i)
+            number_pool = self.get_number_digits(i)
             pool.extend(number_pool)
 
         return pool
 
-        # first_digits = [self.compute_first_digit(
-        #     abs(number)) for number in data]
-        # return first_digits
+    def extract_first_digits(self, data: list[int | float]) -> list:
+        first_digits = [self.compute_first_digit(
+            abs(number)) for number in data]
+        return first_digits
 
     def count_digits(self, data: list[int]) -> dict:
         """Count number of occurences

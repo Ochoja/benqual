@@ -52,7 +52,7 @@ def benford_test_file():
                 print("Excel File")
                 data = Utils.extract_excel_values(filename, column)
 
-            values = Utils.extract_first_digits(data)
+            values = Utils.get_number_pool(data)
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
             p_value = Utils.get_p_value(values)
@@ -72,7 +72,7 @@ def benford_test():
         if type(data) is not list:
             raise Exception
         else:
-            values = Utils.extract_first_digits(data)
+            values = Utils.get_number_pool(data)
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
             p_value = Utils.get_p_value(values)
