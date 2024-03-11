@@ -3,5 +3,5 @@ from api.utils import Utils
 
 Utils = Utils()
 
-nums = Utils.extract_csv_values("uploads/test.csv", "Test_3")
-print(nums)
+digits = Utils.extract_first_digits(['45', '55'])
+print(digits)

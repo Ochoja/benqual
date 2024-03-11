@@ -26,7 +26,7 @@ class Utils:
         try:
             df = pd.read_csv(filename)  # loads file into dataframe
             values = pd.to_numeric(df[column], errors='coerce')
-            return values.dropna().astype(int).tolist()
+            return values.dropna().astype(float).tolist()
         except Exception as e:
             print("Error converting value", e)
             return None
@@ -37,29 +37,47 @@ class Utils:
         try:
             df = pd.read_excel(filename)
             values = pd.to_numeric(df[column], errors='coerce')
-            return values.dropna().astype(int).tolist()
+            return values.dropna().astype(float).tolist()
         except Exception as e:
             print("Error reading document", e)
             return None
 
-    def compute_first_digit(self, number: int | float) -> int:
+    def compute_first_digit(self, number: int | float) -> list:
         """Compute first digit of number"""
-        if type(number) == float:
-            number_str = str(abs(number))
-            decimal_index = number_str.find('.')
-            if decimal_index != -1:
-                number_str = number_str[:decimal_index]
-                return int(number_str[0])
-        else:
-            while number >= 10:
-                number //= 10
-            return number
+        val = str(abs(number))
+        valid_digit = []
 
-    def extract_first_digits(self, data: list[int]) -> list:
+        for i in val:
+            if i != '0' and i != '.':
+                valid_digit.append(i)
+
+        num_pool = [int(i) for i in valid_digit]
+        return num_pool
+
+        # if type(number) == float:
+        #     number_str = str(abs(number))
+        #     decimal_index = number_str.find('.')
+        #     if decimal_index != -1:
+        #         number_str = number_str[:decimal_index]
+        #         return int(number_str[0])
+        # else:
+        #     while number >= 10:
+        #         number //= 10
+        #     return number
+
+    def extract_first_digits(self, data: list[int | float]) -> list:
         """Extract first digits of data set"""
-        first_digits = [self.compute_first_digit(
-            abs(number)) for number in data]
-        return first_digits
+        pool = []
+
+        for i in data:
+            number_pool = self.compute_first_digit(i)
+            pool.extend(number_pool)
+
+        return pool
+
+        # first_digits = [self.compute_first_digit(
+        #     abs(number)) for number in data]
+        # return first_digits
 
     def count_digits(self, data: list[int]) -> dict:
         """Count number of occurences
