@@ -127,4 +127,4 @@ class Utils:
         chi2_stat, p_value = chisquare(
             list(observed_percentages.values()), f_exp=expected_percentages)
 
-        return p_value
+        return [p_value, chi2_stat]

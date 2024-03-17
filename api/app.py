@@ -55,9 +55,9 @@ def benford_test_file():
             values = Utils.get_number_pool(data)
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
-            p_value = Utils.get_p_value(values)
+            p_value, chi2_stat = Utils.get_p_value(values)
             os.remove(filename)  # delete file
-            return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value})
+            return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value, 'chi2_stat': chi2_stat})
         except Exception:
             os.remove(filename)  # delete file
             return jsonify({'error': 'Invalid column name or values'})
@@ -75,8 +75,8 @@ def benford_test():
             values = Utils.get_number_pool(data)
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
-            p_value = Utils.get_p_value(values)
+            p_value, chi2_stat = Utils.get_p_value(values)
     except Exception:
         return jsonify({'error': 'Invalid parameter or format'}), 400
 
-    return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value})
+    return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value, 'chi2_stat': chi2_stat})
