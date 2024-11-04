@@ -1,50 +1,36 @@
-import pandas as pd
-from scipy.stats import chisquare, kstest
-import numpy as np
+@app.route("/api/benford_test/")
+def benford_test():
+    data = request.args.get('data')
 
-class Utils:
-    """Benford's law Utility Functions"""
+    if not data:
+        return jsonify({'error': 'Missing data parameter', 'details': 'The data parameter is required and must be a JSON array'}), 400
 
-    # ... (existing methods) ...
+    try:
+        data = json.loads(data)
+        if not isinstance(data, list):
+            raise ValueError("Data is not a list")
 
-    def get_ks_test(self, data: list[int]) -> tuple:
-        """Perform the Kolmogorov-Smirnov test"""
-        # Benford's Law expected proportions for digits 1 to 9
-        expected_proportions = [0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046]
+        # You can directly use `data` as `values` for analysis
+        values = data  # No need to use get_number_pool; just use the data list
 
-        # Calculate total observed digits
-        total_observed = len(data)
+        # Use existing methods for analysis
+        observed_counts = Utils.count_digits(values)
+        actual_percentages = {digit: count / len(values) for digit, count in observed_counts.items()}
+        expected_percentages = Utils.get_expected_percentages()
+        p_value, chi2_stat = Utils.get_p_value(values)
 
-        # Calculate observed proportions
-        observed_counts = self.count_digits(data)
-        observed_proportions = [observed_counts[digit] / total_observed for digit in range(1, 10)]
+        # Compute KS Statistic and MAD using existing methods
+        ks_statistic, ks_p_value = Utils.get_ks_test(values)
+        mad = Utils.get_mad(values)
 
-        # Calculate cumulative observed and expected proportions
-        cumulative_observed = np.cumsum(observed_proportions)
-        cumulative_expected = np.cumsum(expected_proportions)
-
-        # Calculate the Kolmogorov-Smirnov statistic and p-value
-        ks_statistic = np.max(np.abs(cumulative_observed - cumulative_expected))
-        ks_p_value = kstest(cumulative_observed, cumulative_expected)[1]
-
-        return ks_statistic, ks_p_value
-
-    def get_mad(self, data: list[int]) -> float:
-        """Calculate the Mean Absolute Deviation (MAD)"""
-        # Benford's Law expected proportions for digits 1 to 9
-        expected_proportions = [0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046]
-
-        # Calculate total observed digits
-        total_observed = len(data)
-
-        # Calculate observed proportions
-        observed_counts = self.count_digits(data)
-        observed_proportions = [observed_counts[digit] / total_observed for digit in range(1, 10)]
-
-        # Calculate the absolute deviations
-        absolute_deviations = [abs(o - e) for o, e in zip(observed_proportions, expected_proportions)]
-
-        # Calculate the Mean Absolute Deviation (MAD)
-        mad = sum(absolute_deviations) / len(absolute_deviations)
-
-        return mad
+        return jsonify({
+            'actual_percentages': actual_percentages,
+            'expected_percentages': expected_percentages,
+            'p-value': p_value,
+            'chi2_stat': chi2_stat,
+            'ks_statistic': ks_statistic,
+            'ks_p_value': ks_p_value,
+            'mad': mad
+        })
+    except Exception as e:
+        return jsonify({'error': 'Invalid parameter or format', 'details': str(e)}), 400
