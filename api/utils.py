@@ -10,12 +10,13 @@ def benford_test():
         if not isinstance(data, list):
             raise ValueError("Data is not a list")
 
-        # You can directly use `data` as `values` for analysis
-        values = data  # No need to use get_number_pool; just use the data list
+        # Use the data directly
+        values = data  # No need to use get_number_pool
 
-        # Use existing methods for analysis
+        # Use the existing count_digits method for analysis
         observed_counts = Utils.count_digits(values)
-        actual_percentages = {digit: count / len(values) for digit, count in observed_counts.items()}
+        total_observed = sum(observed_counts.values())
+        actual_percentages = {digit: count / total_observed for digit, count in observed_counts.items()}
         expected_percentages = Utils.get_expected_percentages()
         p_value, chi2_stat = Utils.get_p_value(values)
 
