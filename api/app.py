@@ -14,11 +14,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 Utils = Utils()
 
-
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def upload_file(file):
     """Uploads file to the uploads folder"""
@@ -30,7 +28,6 @@ def upload_file(file):
         return 200  # File saved successfully
     else:
         return 400  # Invalid file type
-
 
 @app.route("/api/benford_test/upload/", methods=['POST'])
 def benford_test_file():
@@ -56,12 +53,24 @@ def benford_test_file():
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
             p_value, chi2_stat = Utils.get_p_value(values)
+            
+            # New: Compute KS Statistic and MAD
+            ks_statistic, ks_p_value = Utils.get_ks_test(values)
+            mad = Utils.get_mad(values)
+
             os.remove(filename)  # delete file
-            return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value, 'chi2_stat': chi2_stat})
+            return jsonify({
+                'actual_percentages': actual_percentages,
+                'expected_percentages': expected_percentages,
+                'p-value': p_value,
+                'chi2_stat': chi2_stat,
+                'ks_statistic': ks_statistic,
+                'ks_p_value': ks_p_value,
+                'mad': mad
+            })
         except Exception:
             os.remove(filename)  # delete file
             return jsonify({'error': 'Invalid column name or values'})
-
 
 @app.route("/api/benford_test/")
 def benford_test():
@@ -76,7 +85,19 @@ def benford_test():
             actual_percentages = Utils.get_digit_percentages(values)
             expected_percentages = Utils.get_expected_percentages()
             p_value, chi2_stat = Utils.get_p_value(values)
+            
+            # New: Compute KS Statistic and MAD
+            ks_statistic, ks_p_value = Utils.get_ks_test(values)
+            mad = Utils.get_mad(values)
     except Exception:
         return jsonify({'error': 'Invalid parameter or format'}), 400
 
-    return jsonify({'actual_percentages': actual_percentages, 'expected_percentages': expected_percentages, 'p-value': p_value, 'chi2_stat': chi2_stat})
+    return jsonify({
+        'actual_percentages': actual_percentages,
+        'expected_percentages': expected_percentages,
+        'p-value': p_value,
+        'chi2_stat': chi2_stat,
+        'ks_statistic': ks_statistic,
+        'ks_p_value': ks_p_value,
+        'mad': mad
+    })
