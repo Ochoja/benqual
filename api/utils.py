@@ -9,10 +9,24 @@ class Utils:
         """Count occurrences of each digit from 1 to 9 in the data"""
         digit_counts = {i: 0 for i in range(1, 10)}
         for number in data:
-            first_digit = int(str(abs(number))[0])  # Get the first digit
+            first_digit = int(str(abs(number))[0])
             if 1 <= first_digit <= 9:
                 digit_counts[first_digit] += 1
         return digit_counts
+
+    def get_expected_percentages(self) -> dict:
+        """Get the expected percentages according to Benford's Law"""
+        expected = [0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046]
+        return {i: expected[i-1] for i in range(1, 10)}
+
+    def get_p_value(self, data: list[int]) -> tuple:
+        """Calculate p-value using chi-squared test"""
+        observed_counts = self.count_digits(data)
+        total_observed = sum(observed_counts.values())
+        expected_proportions = [0.301, 0.176, 0.125, 0.097, 0.079, 0.067, 0.058, 0.051, 0.046]
+        expected_counts = [total_observed * prop for prop in expected_proportions]
+        chi2_stat, p_value = chisquare(list(observed_counts.values()), expected_counts)
+        return p_value, chi2_stat
 
     def get_ks_test(self, data: list[int]) -> tuple:
         """Perform the Kolmogorov-Smirnov test"""
