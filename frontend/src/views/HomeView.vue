@@ -8,7 +8,13 @@ import { RouterLink } from 'vue-router';
 <template>
   <div class="bg"></div>
   <header>
-    <!-- <Navigation></Navigation> -->
+    <nav>
+      <div class="logo">BenQual</div>
+      <RouterLink to="/analyze">
+        <Button>Analyze data</Button>
+      </RouterLink>
+    </nav>
+
     <div class="text">
       <div class="logo">BenQual</div>
       <p>A Data Quality Tool Based on Benford’s Law</p>
@@ -88,6 +94,24 @@ import { RouterLink } from 'vue-router';
 </template>
 
 <style lang="scss" scoped>
+nav {
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #201c70;
+  color: #fff;
+
+  a {
+    text-decoration: none;
+  }
+
+  .logo {
+    font-family: 'Paytone One', sans-serif;
+    font-size: 2em;
+  }
+}
+
 .bg {
   height: 70vh;
   width: 100%;
