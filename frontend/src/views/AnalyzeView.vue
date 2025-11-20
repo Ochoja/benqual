@@ -1,130 +1,123 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import Navigation from '../components/SiteNavigation.vue'
-import Button from '../components/TheButton.vue'
-import Footer from '../components/TheFooter.vue'
-import Result from '../components/DataResult.vue'
-import { Icon } from '@iconify/vue'
-import axios from 'axios'
+import { ref, computed, watch } from 'vue';
+import Button from '../components/TheButton.vue';
+import Footer from '../components/TheFooter.vue';
+import Result from '../components/DataResult.vue';
+import { Icon } from '@iconify/vue';
+import axios from 'axios';
 
-const data = ref('')
-let falseInput = ref(false)
-let noInput = ref(false)
-let values: number[] = []
-let result: any = null
-const showResultBtn = ref(false)
-const loadingIcon = ref(false)
-const showResult = ref(false)
-const showFileResultBtn = ref(false)
-const isFile = ref(false)
-const fileName = ref('')
-const isCSVFile = ref(false)
-let formData = new FormData()
-const column = ref('')
-const isColumnEmpty = ref(false)
-const loadingIconFile = ref(false)
-const fileError = ref(false)
+// --- Reactive state ---
+const data = ref<string>('');
+const falseInput = ref(false);
+const noInput = ref(false);
+const values = ref<number[]>([]);
+const result = ref<any>(null);
+const showResultBtn = ref(false);
+const loadingIcon = ref(false);
+const showResult = ref(false);
+const showFileResultBtn = ref(false);
+const isFile = ref(false);
+const fileName = ref('');
+const isCSVFile = ref(false);
+const formData = ref<FormData>(new FormData());
+const column = ref('');
+const isColumnEmpty = ref(false);
+const loadingIconFile = ref(false);
+const fileError = ref(false);
 
-// Get values by ignoring commas and whitespace in input
-const dataSet = computed(() => {
-  return data.value.split(/[ ,]+/)
-})
+// --- Computed ---
+const dataSet = computed<string[]>(() => {
+  return data.value.split(/[ ,]+/);
+});
 
-// print error message based on state
+// --- Watch ---
 watch(dataSet, () => {
-  let val = dataSet.value.join('').trim()
-  val = val.replace(/[\s.]/g, '')
-  if (isNaN(Number(val)) && val !== '') {
-    falseInput.value = true
-  } else {
-    falseInput.value = false
-    noInput.value = false
-  }
-})
+  let val = dataSet.value.join('').trim().replace(/[\s.]/g, '');
+  falseInput.value = val !== '' && isNaN(Number(val));
+  if (!falseInput.value) noInput.value = false;
+});
 
-// analyze input and send to backend
+// --- Functions ---
 function analyzeData(vals: string[]) {
   if (falseInput.value || data.value.trim() === '') {
-    noInput.value = true
-    return
-  } else {
-    values = []
-    for (let i of vals) {
-      if (i != '') {
-        values.push(parseInt(i))
-      }
-    }
+    noInput.value = true;
+    return;
   }
-  loadingIcon.value = true
+
+  values.value = vals.filter((v) => v !== '').map((v) => parseInt(v, 10));
+
+  loadingIcon.value = true;
   axios
-    .get(`https://benqual.onrender.com/api/benford_test/?data=[${values}]`)
+    .get(
+      `https://benqual.onrender.com/api/benford_test/?data=[${values.value}]`
+    )
     .then((response) => {
-      result = response.data
-      loadingIcon.value = false
-      showResultBtn.value = true
-      showFileResultBtn.value = false // Clear uploads
-      console.log(result)
+      result.value = response.data;
+      loadingIcon.value = false;
+      showResultBtn.value = true;
+      showFileResultBtn.value = false;
+      console.log(result.value);
     })
     .catch((error) => {
-      console.error('Error fetching data:', error)
-    })
+      console.error('Error fetching data:', error);
+      loadingIcon.value = false;
+    });
 }
 
-function checkFileType(event: any) {
-  const file = event.target.files[0]
-  fileName.value = file.name
-  isFile.value = true
-  const str = file.name.toLowerCase()
+function checkFileType(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
 
+  fileName.value = file.name;
+  isFile.value = true;
+
+  const str = file.name.toLowerCase();
   if (
     str.endsWith('.csv') ||
     str.endsWith('.xls') ||
     str.endsWith('.xlsx') ||
     file.type === 'text/csv'
   ) {
-    isCSVFile.value = true
-    formData.append('file', file)
+    isCSVFile.value = true;
+    formData.value = new FormData();
+    formData.value.append('file', file);
   } else {
-    isCSVFile.value = false
+    isCSVFile.value = false;
   }
 }
 
-// analyze file
-formData.append('column', column.value)
 async function analyzeFile() {
-  if (isCSVFile.value && isFile.value && column.value != '') {
-    formData.set('column', column.value)
+  if (!isCSVFile.value || !isFile.value || column.value.trim() === '') {
+    isColumnEmpty.value = true;
+    console.log('Upload File and Input column name');
+    return;
+  }
 
-    try {
-      loadingIconFile.value = true
-      const response = await axios.post(
-        'https://benqual.onrender.com/api/benford_test/upload/?file',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      )
-      loadingIconFile.value = false
-      isColumnEmpty.value = true
-      showResultBtn.value = false
-      result = response.data
-      console.log(result)
+  formData.value.set('column', column.value);
 
-      if (result.error) {
-        fileError.value = true
-        result = null
-      } else {
-        showFileResultBtn.value = true
-        fileError.value = false
-      }
-    } catch (error) {
-      console.log('Error uploading file')
-    } // end try-catch
-  } else {
-    isColumnEmpty.value = true
-    console.log('Upload File and Input column name')
+  try {
+    loadingIconFile.value = true;
+    const response = await axios.post(
+      'https://benqual.onrender.com/api/benford_test/upload/?file',
+      formData.value,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    loadingIconFile.value = false;
+    isColumnEmpty.value = false;
+    result.value = response.data;
+
+    if (result.value.error) {
+      fileError.value = true;
+      result.value = null;
+    } else {
+      showFileResultBtn.value = true;
+      fileError.value = false;
+    }
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    loadingIconFile.value = false;
+    fileError.value = true;
   }
 }
 </script>
@@ -135,23 +128,37 @@ async function analyzeFile() {
       <Result :result="result" @close-modal="showResult = false"></Result>
     </div>
   </Teleport>
-  <Navigation></Navigation>
+  <!-- <Navigation></Navigation> -->
+  <nav>
+    <div class="logo">BenQual</div>
+    <RouterLink to="/analyze">
+      <Button>Analyze data</Button>
+    </RouterLink>
+  </nav>
 
   <main>
     <h2>Analyze Data</h2>
 
     <form>
       <h3>Input Data input</h3>
-      <textarea v-model="data" placeholder="Input some numbers" class="values"></textarea>
+      <textarea
+        v-model="data"
+        placeholder="Input some numbers"
+        class="values"></textarea>
       <!-- <input type="text" v-model="data" class="values" placeholder="Input some numbers" /> -->
       <p>Note: numbers should be seperated by commas or spaces</p>
       <p v-show="falseInput" class="warning">Only Numbers are allowed</p>
       <p v-show="noInput" class="warning">Please input some numbers</p>
 
       <div class="test">
-        <Button :icon="`ph:play-fill`" @click.prevent="analyzeData(dataSet)">Test</Button>
+        <Button :icon="`ph:play-fill`" @click.prevent="analyzeData(dataSet)"
+          >Test</Button
+        >
         <Icon icon="eos-icons:loading" v-if="loadingIcon" class="loading" />
-        <Button :icon="`carbon:result`" v-if="showResultBtn" @click.prevent="showResult = true">
+        <Button
+          :icon="`carbon:result`"
+          v-if="showResultBtn"
+          @click.prevent="showResult = true">
           View Result
         </Button>
       </div>
@@ -160,24 +167,40 @@ async function analyzeFile() {
     <form>
       <h3>Upload Document</h3>
       <div class="upload">
-        <input type="file" id="file-upload" accept=".csv, .xls, .xlsx" @change="checkFileType" />
+        <input
+          type="file"
+          id="file-upload"
+          accept=".csv, .xls, .xlsx"
+          @change="checkFileType" />
         <label for="file-upload" class="upload-label" v-if="isFile">
           {{ fileName }} <Icon :icon="`ep:upload-filled`" class="icon"></Icon>
         </label>
         <label for="file-upload" class="upload-label" v-else>
           Upload CSV File <Icon :icon="`ep:upload-filled`" class="icon"></Icon>
         </label>
-        <input type="text" v-model="column" placeholder="Type Column name to be Analyzed" />
+        <input
+          type="text"
+          v-model="column"
+          placeholder="Type Column name to be Analyzed" />
       </div>
       <p v-show="!isCSVFile && fileName != ''" class="warning">
         Only Excel Files and CSV files Allowed
       </p>
-      <p v-if="fileError" class="warning">Error Processing File. Check column name</p>
-      <p v-if="isColumnEmpty" class="warning">Upload File and Input column name</p>
+      <p v-if="fileError" class="warning">
+        Error Processing File. Check column name
+      </p>
+      <p v-if="isColumnEmpty" class="warning">
+        Upload File and Input column name
+      </p>
       <div class="test">
-        <Button :icon="`ph:play-fill`" @click.prevent="analyzeFile">Test</Button>
+        <Button :icon="`ph:play-fill`" @click.prevent="analyzeFile"
+          >Test</Button
+        >
         <Icon icon="eos-icons:loading" v-if="loadingIconFile" class="loading" />
-        <Button :icon="`carbon:result`" v-if="showFileResultBtn" @click.prevent="showResult = true">
+        <Button
+          :icon="`carbon:result`"
+          v-if="showFileResultBtn"
+          @click.prevent="showResult = true">
           View Result
         </Button>
       </div>
@@ -199,7 +222,7 @@ main {
   }
 
   form {
-    margin-bottom: 30px;
+    margin-bottom: 85px;
 
     h3 {
       font-weight: 500;
@@ -311,6 +334,24 @@ main {
 @media screen and (max-width: 650px) {
   main {
     margin: 30px 25px;
+  }
+}
+
+nav {
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #201c70;
+  color: #fff;
+
+  a {
+    text-decoration: none;
+  }
+
+  .logo {
+    font-family: 'Paytone One', sans-serif;
+    font-size: 2em;
   }
 }
 </style>

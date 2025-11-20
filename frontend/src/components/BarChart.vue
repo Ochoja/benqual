@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { Bar, Line } from 'vue-chartjs'
+import { computed } from 'vue';
+import { Bar, Line } from 'vue-chartjs';
 import {
   Chart as ChartJS,
   Title,
@@ -10,54 +10,98 @@ import {
   LineElement,
   PointElement,
   CategoryScale,
-  LinearScale
-} from 'chart.js'
+  LinearScale,
+  type ChartData,
+  type ChartOptions,
+} from 'chart.js';
 
 ChartJS.register(
   Title,
   Tooltip,
   Legend,
   BarElement,
-  CategoryScale,
-  LinearScale,
   LineElement,
-  PointElement
-)
+  PointElement,
+  CategoryScale,
+  LinearScale
+);
 
-const props = defineProps({
-  actual_values: Object,
-  expected_values: Object
-})
+// Props
+const props = defineProps<{
+  actual_values: number[];
+  expected_values: number[];
+}>();
 
-const actualChartData = reactive({
-  labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
-  datasets: [{ data: props.actual_values, backgroundColor: '#201c70', label: 'Actual Percentage' }]
-})
+const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-const expectedChartData = reactive({
-  labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+// Chart data for Bar charts
+const actualBarData = computed<ChartData<'bar', number[], string>>(() => ({
+  labels,
   datasets: [
-    { data: props.expected_values, backgroundColor: '#00a650', label: 'Expected Percentage' }
-  ]
-})
+    {
+      label: 'Actual Percentage',
+      data: props.actual_values,
+      backgroundColor: '#201c70',
+    },
+  ],
+}));
 
-const allChartData = reactive({
-  labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+const expectedBarData = computed<ChartData<'bar', number[], string>>(() => ({
+  labels,
   datasets: [
-    { data: props.expected_values, backgroundColor: '#00a650', label: 'Expected Percentage' },
-    { data: props.actual_values, backgroundColor: '#201c70', label: 'Actual Percentage' }
-  ]
-})
+    {
+      label: 'Expected Percentage',
+      data: props.expected_values,
+      backgroundColor: '#00a650',
+    },
+  ],
+}));
 
-const chartOptions = reactive({ responsive: true })
+const allBarData = computed<ChartData<'bar', number[], string>>(() => ({
+  labels,
+  datasets: [
+    {
+      label: 'Expected Percentage',
+      data: props.expected_values,
+      backgroundColor: '#00a650',
+    },
+    {
+      label: 'Actual Percentage',
+      data: props.actual_values,
+      backgroundColor: '#201c70',
+    },
+  ],
+}));
+
+// Chart data for Line chart
+const actualLineData = computed<ChartData<'line', number[], string>>(() => ({
+  labels,
+  datasets: [
+    {
+      label: 'Actual Percentage',
+      data: props.actual_values,
+      borderColor: '#201c70',
+      backgroundColor: '#201c70',
+      fill: false,
+    },
+  ],
+}));
+
+// Chart options (works for both Bar and Line)
+const chartOptions: ChartOptions<'bar' | 'line'> = {
+  responsive: true,
+  plugins: {
+    legend: { position: 'top' },
+    title: { display: true, text: 'Benford Analysis Chart' },
+  },
+};
 </script>
 
 <template>
-  <Bar id="expected-chart" :options="chartOptions" :data="expectedChartData" />
-  <br />
-  <Bar id="actual-chart" :options="chartOptions" :data="actualChartData" />
-  <br />
-  <Line id="line-chart" :options="chartOptions" :data="actualChartData" />
-  <br />
-  <Bar id="actual-chart" :options="chartOptions" :data="allChartData" />
+  <div>
+    <Bar :data="expectedBarData" :options="chartOptions" />
+    <Bar :data="actualBarData" :options="chartOptions" />
+    <Line :data="actualLineData" :options="chartOptions" />
+    <Bar :data="allBarData" :options="chartOptions" />
+  </div>
 </template>

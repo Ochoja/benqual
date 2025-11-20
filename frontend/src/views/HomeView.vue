@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import Navigation from '../components/SiteNavigation.vue'
-import Button from '../components/TheButton.vue'
-import Footer from '../components/TheFooter.vue'
-import { RouterLink } from 'vue-router'
+// import Navigation from '../components/SiteNavigation.vue'
+import Button from '../components/TheButton.vue';
+import Footer from '../components/TheFooter.vue';
+import { RouterLink } from 'vue-router';
 </script>
 
 <template>
   <div class="bg"></div>
   <header>
-    <Navigation></Navigation>
+    <!-- <Navigation></Navigation> -->
     <div class="text">
       <div class="logo">BenQual</div>
       <p>A Data Quality Tool Based on Benford’s Law</p>
@@ -23,22 +23,24 @@ import { RouterLink } from 'vue-router'
     <section>
       <h2>What is Benford Law</h2>
       <p>
-        Benford's Law, also known as the First-Digit Law, is a statistical principle proposed by
-        physicist Frank Benford in 1938. It reveals that in many datasets, the distribution of
-        leading digits follows a non-uniform pattern, with smaller digits occurring more frequently
-        than larger ones.
+        Benford's Law, also known as the First-Digit Law, is a statistical
+        principle proposed by physicist Frank Benford in 1938. It reveals that
+        in many datasets, the distribution of leading digits follows a
+        non-uniform pattern, with smaller digits occurring more frequently than
+        larger ones.
       </p>
       <br />
       <p>
-        This phenomenon has broad applications across various fields like finance, accounting, and
-        scientific research. By leveraging Benford's Law, analysts can detect anomalies, identify
-        potential fraud, and validate data integrity with ease.
+        This phenomenon has broad applications across various fields like
+        finance, accounting, and scientific research. By leveraging Benford's
+        Law, analysts can detect anomalies, identify potential fraud, and
+        validate data integrity with ease.
       </p>
       <br />
       <p>
-        In essence, Benford's Law provides a powerful heuristic for uncovering hidden insights in
-        numerical data, offering valuable perspectives that can enhance data analysis across diverse
-        disciplines.
+        In essence, Benford's Law provides a powerful heuristic for uncovering
+        hidden insights in numerical data, offering valuable perspectives that
+        can enhance data analysis across diverse disciplines.
       </p>
     </section>
 
@@ -52,8 +54,8 @@ import { RouterLink } from 'vue-router'
           <RouterLink to="/analyze">Analysis page</RouterLink>
         </p>
         <p>
-          <span class="bold">Step 2:</span> Input data using the text field. Numbers should be
-          seperated by space or commas.
+          <span class="bold">Step 2:</span> Input data using the text field.
+          Numbers should be seperated by space or commas.
         </p>
         <p><span class="bold">Step 3:</span> Click on the test button</p>
       </div>
@@ -65,7 +67,8 @@ import { RouterLink } from 'vue-router'
           <RouterLink to="/analyze">Analysis page</RouterLink>
         </p>
         <p>
-          <span class="bold">Step 2:</span> Click on Upload Document and select a
+          <span class="bold">Step 2:</span> Click on Upload Document and select
+          a
           <a
             href="https://en.wikipedia.org/wiki/Comma-separated_values#:~:text=Comma-separated%20values%20%28CSV%29%20is%20a%20text%20file%20format,of%20the%20file%20typically%20represents%20one%20data%20record."
             >CSV</a
@@ -73,7 +76,8 @@ import { RouterLink } from 'vue-router'
           file which contains data to be analyzed
         </p>
         <p>
-          <span class="bold">Step 3:</span>Type name of Column to be analyzed in the input field.
+          <span class="bold">Step 3:</span>Type name of Column to be analyzed in
+          the input field.
         </p>
         <p><span class="bold">Step 4:</span> Click on the test button</p>
       </div>

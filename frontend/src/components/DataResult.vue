@@ -1,35 +1,58 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
-import Chart from '../components/BarChart.vue'
+import { Icon } from '@iconify/vue';
+import Chart from '../components/BarChart.vue';
+
+interface BenfordResult {
+  actual_percentages: Record<number, number>;
+  expected_percentages: Record<number, number>;
+  'p-value': number;
+  chi2_stat: number;
+}
 
 const props = defineProps<{
-  result?: any
-}>()
+  result?: BenfordResult;
+}>();
 
-const actual_percentage = props.result.actual_percentages
-const expected_percentage = props.result.expected_percentages
-let pValue: string | number = Number(props.result['p-value']).toFixed(4)
-let chi2_stat: string | number = Number(props.result['chi2_stat']).toFixed(4)
-pValue = parseFloat(pValue)
+// Safely extract values or default to empty objects
+const actual_percentage = props.result?.actual_percentages ?? {};
+const expected_percentage = props.result?.expected_percentages ?? {};
 
-const actual_values: number[] = []
-const expected_values: number[] = []
+// Safe p-value and chi-square formatting
+const pValue: number = props.result
+  ? parseFloat(props.result['p-value'].toFixed(4))
+  : 0;
+const chi2_stat: number = props.result
+  ? parseFloat(props.result.chi2_stat.toFixed(4))
+  : 0;
+
+// Prepare arrays for chart
+const actual_values: number[] = [];
+const expected_values: number[] = [];
 
 for (let i = 1; i <= 9; i++) {
-  actual_values.push(actual_percentage[i])
-  expected_values.push(expected_percentage[i])
+  actual_values.push(actual_percentage[i] ?? 0);
+  expected_values.push(expected_percentage[i] ?? 0);
 }
 </script>
 
 <template>
   <div class="main">
     <div class="container">
-      <Icon :icon="`carbon:close-filled`" class="close" @click="$emit('close-modal')"></Icon>
+      <!-- Close button -->
+      <Icon
+        :icon="'carbon:close-filled'"
+        class="close"
+        @click="$emit('close-modal')" />
+
       <h3>Results</h3>
 
-      <p v-if="pValue >= 0.05" class="green">Data conforms with Benford’s Law</p>
-      <p v-else class="red">Data does not conform with Benford’s law</p>
+      <!-- Conformance message -->
+      <p v-if="pValue >= 0.05" class="green">
+        Data conforms with Benford’s Law
+      </p>
+      <p v-else class="red">Data does not conform with Benford’s Law</p>
 
+      <!-- Results table -->
       <div class="table">
         <div class="heading">
           <div>Number</div>
@@ -39,18 +62,22 @@ for (let i = 1; i <= 9; i++) {
 
         <div class="row" v-for="i in 9" :key="i">
           <div>{{ i }}</div>
-          <div>{{ expected_percentage[i] }}</div>
-          <div>{{ actual_percentage[i] }}</div>
+          <div>{{ expected_percentage[i] ?? 0 }}</div>
+          <div>{{ actual_percentage[i] ?? 0 }}</div>
         </div>
       </div>
 
+      <!-- P-value and Chi-square -->
       <div class="other">
         <div><span class="bold">P-Value: </span>{{ pValue }}</div>
-        <div><span class="bold">Chi-square value : </span>{{ chi2_stat }}</div>
+        <div><span class="bold">Chi-square value: </span>{{ chi2_stat }}</div>
       </div>
 
+      <!-- Chart -->
       <div>
-        <Chart :actual_values :expected_values></Chart>
+        <Chart
+          :actual_values="actual_values"
+          :expected_values="expected_values" />
       </div>
     </div>
   </div>
@@ -105,6 +132,7 @@ for (let i = 1; i <= 9; i++) {
 
     .table {
       margin-top: 10px;
+
       .heading {
         font-weight: 500;
       }
