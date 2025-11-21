@@ -47,10 +47,9 @@ function analyzeData(vals: string[]) {
   values.value = vals.filter((v) => v !== '').map((v) => parseInt(v, 10));
 
   loadingIcon.value = true;
-  const dataParam = encodeURIComponent(JSON.stringify(values.value));
   axios
     .get(
-      `https://benqual.onrender.com/api/benford_test/?data=${dataParam}`
+      `https://benqual.onrender.com/api/benford_test/?data=${JSON.stringify(values.value)}`
     )
     .then((response) => {
       result.value = response.data;
