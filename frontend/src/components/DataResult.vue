@@ -2,11 +2,24 @@
 import { Icon } from '@iconify/vue';
 import Chart from '../components/BarChart.vue';
 
+interface DataQuality {
+  total_records: number;
+  valid_records: number;
+  data_completeness: number;
+  ready_for_analysis: boolean;
+}
+
 interface BenfordResult {
   actual_percentages: Record<number, number>;
   expected_percentages: Record<number, number>;
   'p-value': number;
   chi2_stat: number;
+  ks_statistic?: number;
+  ks_p_value?: number;
+  mad?: number;
+  records_analyzed?: number;
+  data_quality?: DataQuality;
+  issues?: string[];
 }
 
 const props = defineProps<{
@@ -46,11 +59,42 @@ for (let i = 1; i <= 9; i++) {
 
       <h3>Results</h3>
 
+      <!-- Data Quality Summary -->
+      <div v-if="props.result?.data_quality" class="quality-summary">
+        <h4>Data Quality Summary</h4>
+        <div class="quality-stats">
+          <div class="stat">
+            <span class="label">Total Records:</span>
+            <span class="value">{{ props.result.data_quality.total_records }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Valid Records:</span>
+            <span class="value">{{ props.result.data_quality.valid_records }}</span>
+          </div>
+          <div class="stat">
+            <span class="label">Data Completeness:</span>
+            <span class="value">{{ props.result.data_quality.data_completeness }}%</span>
+          </div>
+        </div>
+
+        <div v-if="props.result.issues && props.result.issues.length > 0" class="issues">
+          <h5>Data Issues Detected:</h5>
+          <ul>
+            <li v-for="(issue, idx) in props.result.issues.slice(0, 5)" :key="idx">
+              {{ issue }}
+            </li>
+            <li v-if="props.result.issues.length > 5" class="more">
+              ... and {{ props.result.issues.length - 5 }} more issues
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <!-- Conformance message -->
       <p v-if="pValue >= 0.05" class="green">
-        Data conforms with Benford’s Law
+        Data conforms with Benford's Law
       </p>
-      <p v-else class="red">Data does not conform with Benford’s Law</p>
+      <p v-else class="red">Data does not conform with Benford's Law</p>
 
       <!-- Results table -->
       <div class="table">
@@ -67,10 +111,20 @@ for (let i = 1; i <= 9; i++) {
         </div>
       </div>
 
-      <!-- P-value and Chi-square -->
+      <!-- Statistical Tests -->
       <div class="other">
         <div><span class="bold">P-Value: </span>{{ pValue }}</div>
-        <div><span class="bold">Chi-square value: </span>{{ chi2_stat }}</div>
+        <div><span class="bold">Chi-square: </span>{{ chi2_stat }}</div>
+        <div v-if="props.result?.ks_statistic !== undefined">
+          <span class="bold">KS Statistic: </span>{{ props.result.ks_statistic.toFixed(4) }}
+        </div>
+        <div v-if="props.result?.mad !== undefined">
+          <span class="bold">MAD: </span>{{ props.result.mad.toFixed(4) }}
+        </div>
+      </div>
+
+      <div v-if="props.result?.records_analyzed" class="records-info">
+        <span class="bold">Records Analyzed: </span>{{ props.result.records_analyzed }}
       </div>
 
       <!-- Chart -->
@@ -151,11 +205,83 @@ for (let i = 1; i <= 9; i++) {
       }
     }
 
+    .quality-summary {
+      background: #f5f5f5;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+
+      h4 {
+        margin-bottom: 10px;
+        color: #201c70;
+      }
+
+      h5 {
+        margin-top: 15px;
+        margin-bottom: 5px;
+        font-size: 0.95em;
+        color: #201c70;
+      }
+
+      .quality-stats {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+
+        .stat {
+          display: flex;
+          gap: 5px;
+
+          .label {
+            font-weight: 500;
+          }
+
+          .value {
+            font-weight: 600;
+            color: #00a650;
+          }
+        }
+      }
+
+      .issues {
+        margin-top: 10px;
+
+        ul {
+          margin: 5px 0;
+          padding-left: 20px;
+          font-size: 0.9em;
+
+          li {
+            margin: 3px 0;
+            color: #d32f2f;
+          }
+
+          li.more {
+            color: #666;
+            font-style: italic;
+          }
+        }
+      }
+    }
+
     .other {
       margin: 10px auto 25px auto;
       display: flex;
       justify-content: center;
       gap: 10px;
+      flex-wrap: wrap;
+
+      .bold {
+        font-weight: 600;
+        color: #201c70;
+      }
+    }
+
+    .records-info {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 0.95em;
 
       .bold {
         font-weight: 600;

@@ -8,30 +8,16 @@ class ValidationReportDB:
 
     def __init__(self):
         self.url = os.getenv('VITE_SUPABASE_URL')
-        self.key = os.getenv('VITE_SUPABASE_SUPABASE_ANON_KEY')
+        self.key = os.getenv('VITE_SUPABASE_ANON_KEY') or os.getenv('VITE_SUPABASE_SUPABASE_ANON_KEY')
         self.supabase_client = None
 
         if self.url and self.key:
             try:
                 from supabase import create_client
                 self.supabase_client = create_client(self.url, self.key)
-                self._init_table()
             except Exception as e:
                 print(f"Warning: Could not initialize Supabase client: {e}")
 
-    def _init_table(self):
-        """Initialize the validation_reports table if it doesn't exist"""
-        if not self.supabase_client:
-            return
-
-        try:
-            from supabase import create_client
-            admin_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
-            if admin_key:
-                admin_client = create_client(self.url, admin_key)
-                admin_client.rpc('create_validation_reports_table').execute()
-        except Exception as e:
-            pass
 
     def save_validation_report(self, report: Dict[str, Any]) -> Optional[str]:
         """Save a validation report to the database"""
