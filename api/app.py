@@ -63,18 +63,21 @@ def validate_dataset():
         return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
 
 
-@app.route("/api/benford_test/", methods=['GET'])
+@app.route("/api/benford_test/", methods=['POST'])
 def benford_test():
     """Perform Benford's Law analysis with automatic missing value handling"""
-    data = request.args.get('data')
-    skip_validation = request.args.get(
-        'skip_validation', 'false').lower() == 'true'
+    json_data = request.get_json()
+
+    if not json_data:
+        return jsonify({'error': 'Missing JSON body', 'details': 'Request must include a JSON body'}), 400
+
+    data = json_data.get('data')
+    skip_validation = json_data.get('skip_validation', False)
 
     if not data:
         return jsonify({'error': 'Missing data parameter', 'details': 'The data parameter is required and must be a JSON array'}), 400
 
     try:
-        data = json.loads(data)
         if not isinstance(data, list):
             raise ValueError("Data is not a list")
 

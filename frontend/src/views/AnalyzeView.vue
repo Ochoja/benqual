@@ -48,10 +48,8 @@ function analyzeData(vals: string[]) {
 
   loadingIcon.value = true;
   axios
-    .get('https://benqual.onrender.com/api/benford_test/', {
-      params: {
-        data: JSON.stringify(values.value)
-      }
+    .post('https://benqual.onrender.com/api/benford_test/', {
+      data: values.value
     })
     .then((response) => {
       result.value = response.data;
