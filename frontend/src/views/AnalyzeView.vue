@@ -47,10 +47,17 @@ function analyzeData(vals: string[]) {
   values.value = vals.filter((v) => v !== '').map((v) => parseInt(v, 10));
 
   loadingIcon.value = true;
+  console.log(values.value);
   axios
-    .post('https://benqual.onrender.com/api/benford_test/', {
-      data: values.value
-    })
+    .post(
+      'https://benqual.onrender.com/api/benford_test/',
+      {
+        data: values.value,
+      },
+      {
+        headers: { 'Content-Type': 'application/json' }, // optional, Axios usually sets it
+      }
+    )
     .then((response) => {
       result.value = response.data;
       loadingIcon.value = false;

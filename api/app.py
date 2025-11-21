@@ -7,16 +7,7 @@ from api.validators import DataValidator
 
 app = Flask(__name__)
 
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:5173",
-            "https://benqual.netlify.app"
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+CORS(app)
 
 UPLOAD_FOLDER = './'
 ALLOWED_EXTENSIONS = {'csv', 'xls', 'xlsx'}
