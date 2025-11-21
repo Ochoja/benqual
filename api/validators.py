@@ -104,10 +104,15 @@ class DataValidator:
     def generate_quality_report(data: List[Any]) -> Dict[str, Any]:
         """Generate a comprehensive data quality report"""
         missing_analysis = DataValidator.detect_missing_values(data)
-        numeric_analysis = DataValidator.validate_numeric_values(data)
+        numeric_analysis = DataValidator.validate_numeric_values(missing_analysis['valid_records'])
 
         total_records = len(data)
         valid_for_analysis = numeric_analysis['valid_count']
+
+        missing_count = missing_analysis['missing_count']
+        invalid_count = numeric_analysis['invalid_count']
+        total_problematic = missing_count + invalid_count
+
         data_completeness = (valid_for_analysis / total_records * 100) if total_records > 0 else 0
 
         MIN_REQUIRED_RECORDS = 10
@@ -128,7 +133,13 @@ class DataValidator:
         if total_records == 0:
             quality_issues.append("Empty dataset: No records provided")
 
-        all_issues = list(set(missing_analysis['issues'] + numeric_analysis['issues'] + quality_issues))
+        if missing_count > 0:
+            quality_issues.append(f"Found {missing_count} missing value(s) ({missing_analysis['missing_percentage']:.2f}%)")
+
+        if invalid_count > 0:
+            quality_issues.append(f"Found {invalid_count} invalid/non-numeric value(s)")
+
+        all_issues = missing_analysis['issues'] + numeric_analysis['issues'] + quality_issues
 
         return {
             'summary': {
