@@ -1,13 +1,10 @@
 from flask import Flask, jsonify, request, abort
-from flask_cors import CORS
 import os
 import json
 from api.utils import Utils
 from api.validators import DataValidator
-from api.database import ValidationReportDB
 
 app = Flask(__name__)
-CORS(app)
 
 UPLOAD_FOLDER = './'
 ALLOWED_EXTENSIONS = {'csv', 'xls', 'xlsx'}
@@ -16,7 +13,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 utils = Utils()
 validator = DataValidator()
-db = ValidationReportDB()
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -39,13 +35,9 @@ def validate_dataset():
             raise ValueError("Data is not a list")
 
         quality_report = DataValidator.generate_quality_report(data)
-        dataset_name = request.args.get('dataset_name') or request.form.get('dataset_name') or (request.get_json() or {}).get('dataset_name', 'Unnamed Dataset')
-
-        report_id = db.save_validation_report({**quality_report, 'dataset_name': dataset_name})
 
         return jsonify({
             'status': 'success',
-            'report_id': report_id,
             'data_quality': quality_report['summary'],
             'missing_values': quality_report['missing_values'],
             'invalid_values': quality_report['invalid_values'],
@@ -110,30 +102,6 @@ def benford_test():
     except Exception as e:
         return jsonify({'error': 'Invalid parameter or format', 'details': str(e)}), 400
 
-@app.route("/api/validation_reports/", methods=['GET'])
-def get_validation_reports():
-    """Retrieve recent validation reports"""
-    limit = request.args.get('limit', 10, type=int)
-    reports = db.get_validation_reports(limit)
-
-    return jsonify({
-        'status': 'success',
-        'count': len(reports),
-        'reports': reports
-    })
-
-@app.route("/api/validation_reports/<report_id>", methods=['GET'])
-def get_validation_report(report_id):
-    """Retrieve a specific validation report"""
-    report = db.get_report_by_id(report_id)
-
-    if not report:
-        return jsonify({'error': 'Report not found', 'details': f'No report found with ID {report_id}'}), 404
-
-    return jsonify({
-        'status': 'success',
-        'report': report
-    })
 
 if __name__ == "__main__":
     app.run(debug=True)
