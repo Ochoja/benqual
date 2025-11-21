@@ -67,6 +67,8 @@ function analyzeData(vals: string[]) {
     })
     .catch((error) => {
       console.error('Error fetching data:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
       loadingIcon.value = false;
     });
 }
