@@ -1,12 +1,10 @@
-from flask import Flask, jsonify, request, abort
-from flask_cors import CORS
+from flask import Flask, jsonify, request
 import os
 import json
 from api.utils import Utils
 from api.validators import DataValidator
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = './'
 ALLOWED_EXTENSIONS = {'csv', 'xls', 'xlsx'}
@@ -16,9 +14,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 utils = Utils()
 validator = DataValidator()
 
+
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route("/api/validate_dataset/", methods=['GET', 'POST'])
 def validate_dataset():
@@ -26,7 +26,8 @@ def validate_dataset():
     if request.method == 'GET':
         data = request.args.get('data')
     else:
-        data = request.form.get('data') or (request.get_json() or {}).get('data')
+        data = request.form.get('data') or (
+            request.get_json() or {}).get('data')
 
     if not data:
         return jsonify({'error': 'Missing data parameter', 'details': 'The data parameter is required and must be a JSON array'}), 400
@@ -49,11 +50,13 @@ def validate_dataset():
     except Exception as e:
         return jsonify({'error': 'Validation failed', 'details': str(e)}), 400
 
+
 @app.route("/api/benford_test/", methods=['GET'])
 def benford_test():
     """Perform Benford's Law analysis with automatic missing value handling"""
     data = request.args.get('data')
-    skip_validation = request.args.get('skip_validation', 'false').lower() == 'true'
+    skip_validation = request.args.get(
+        'skip_validation', 'false').lower() == 'true'
 
     if not data:
         return jsonify({'error': 'Missing data parameter', 'details': 'The data parameter is required and must be a JSON array'}), 400
@@ -64,7 +67,8 @@ def benford_test():
             raise ValueError("Data is not a list")
 
         if not skip_validation:
-            cleaned_data, quality_report = DataValidator.preprocess_for_analysis(data)
+            cleaned_data, quality_report = DataValidator.preprocess_for_analysis(
+                data)
 
             if not quality_report['summary']['ready_for_analysis']:
                 return jsonify({
@@ -78,7 +82,8 @@ def benford_test():
 
         observed_counts = utils.count_digits(cleaned_data)
         total_observed = sum(observed_counts.values())
-        actual_percentages = {digit: count / total_observed for digit, count in observed_counts.items()}
+        actual_percentages = {
+            digit: count / total_observed for digit, count in observed_counts.items()}
         expected_percentages = utils.get_expected_percentages()
         p_value, chi2_stat = utils.get_p_value(cleaned_data)
 
