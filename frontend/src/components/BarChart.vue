@@ -87,21 +87,30 @@ const actualLineData = computed<ChartData<'line', number[], string>>(() => ({
   ],
 }));
 
-// Chart options (works for both Bar and Line)
-const chartOptions: ChartOptions<'bar' | 'line'> = {
+// Chart options for Bar charts
+const barOptions: ChartOptions<'bar'> = {
   responsive: true,
   plugins: {
     legend: { position: 'top' },
-    title: { display: true, text: 'Benford Analysis Chart' },
+    title: { display: true, text: 'Benford Analysis - Bar' },
+  },
+};
+
+// Chart options for Line charts
+const lineOptions: ChartOptions<'line'> = {
+  responsive: true,
+  plugins: {
+    legend: { position: 'top' },
+    title: { display: true, text: 'Benford Analysis - Line' },
   },
 };
 </script>
 
 <template>
   <div>
-    <Bar :data="expectedBarData" :options="chartOptions" />
-    <Bar :data="actualBarData" :options="chartOptions" />
-    <Line :data="actualLineData" :options="chartOptions" />
-    <Bar :data="allBarData" :options="chartOptions" />
+    <Bar :data="expectedBarData" :options="barOptions" />
+    <Bar :data="actualBarData" :options="barOptions" />
+    <Line :data="actualLineData" :options="lineOptions" />
+    <Bar :data="allBarData" :options="barOptions" />
   </div>
 </template>
