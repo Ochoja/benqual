@@ -1,10 +1,12 @@
 from flask import Flask, jsonify, request, abort
+from flask_cors import CORS
 import os
 import json
 from api.utils import Utils
 from api.validators import DataValidator
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = './'
 ALLOWED_EXTENSIONS = {'csv', 'xls', 'xlsx'}
