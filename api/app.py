@@ -90,13 +90,24 @@ def benford_test():
 
             if not quality_report['summary']['ready_for_analysis']:
                 return jsonify({
-                    'error': 'Insufficient valid data',
-                    'details': 'Dataset contains no valid numeric records for analysis',
-                    'data_quality': quality_report
-                }), 400
+                    'status': 'insufficient_data',
+                    'data_quality': quality_report['summary'],
+                    'missing_values': quality_report.get('missing_values', {}),
+                    'invalid_values': quality_report.get('invalid_values', {}),
+                    'issues': quality_report['issues'],
+                    'ready_for_analysis': False,
+                    'message': 'Dataset contains insufficient valid numeric records for full analysis'
+                }), 200
         else:
             cleaned_data = data
             quality_report = None
+
+        if len(cleaned_data) == 0:
+            return jsonify({
+                'status': 'no_data',
+                'message': 'No valid data to analyze',
+                'records_analyzed': 0
+            }), 200
 
         observed_counts = utils.count_digits(cleaned_data)
         total_observed = sum(observed_counts.values())
@@ -109,6 +120,7 @@ def benford_test():
         mad = utils.get_mad(cleaned_data)
 
         response = {
+            'status': 'success',
             'actual_percentages': actual_percentages,
             'expected_percentages': expected_percentages,
             'p-value': p_value,
