@@ -7,6 +7,25 @@ class DataValidator:
     """Handles data validation, missing value detection, and data quality reporting"""
 
     @staticmethod
+    def is_missing_value(value: Any) -> bool:
+        """Check if a value should be considered missing"""
+        if pd.isna(value) or value is None:
+            return True
+
+        if isinstance(value, str):
+            cleaned = value.strip().upper()
+            missing_indicators = [
+                '', 'NULL', 'NONE', 'NA', 'N/A', 'NAN',
+                '#N/A', '#NA', 'MISSING', '-', '--', '?',
+                '...', 'UNKNOWN', 'N.A.', 'NOT AVAILABLE',
+                'NOT APPLICABLE', 'NIL', '#DIV/0!', '#VALUE!'
+            ]
+            if cleaned in missing_indicators:
+                return True
+
+        return False
+
+    @staticmethod
     def detect_missing_values(data: List[Any]) -> Dict[str, Any]:
         """Detect missing values in the dataset"""
         if not isinstance(data, list):
@@ -24,9 +43,9 @@ class DataValidator:
         issues = []
 
         for idx, value in enumerate(data):
-            if pd.isna(value) or value is None or (isinstance(value, str) and value.strip() == ''):
+            if DataValidator.is_missing_value(value):
                 missing_indices.append(idx)
-                issues.append(f"Row {idx}: Missing value detected")
+                issues.append(f"Row {idx}: Missing value detected (value: '{value}')")
             else:
                 valid_records.append(value)
 
@@ -91,12 +110,34 @@ class DataValidator:
         valid_for_analysis = numeric_analysis['valid_count']
         data_completeness = (valid_for_analysis / total_records * 100) if total_records > 0 else 0
 
+        MIN_REQUIRED_RECORDS = 10
+        MIN_COMPLETENESS_THRESHOLD = 50.0
+
+        is_ready = (
+            valid_for_analysis >= MIN_REQUIRED_RECORDS and
+            data_completeness >= MIN_COMPLETENESS_THRESHOLD
+        )
+
+        quality_issues = []
+        if valid_for_analysis < MIN_REQUIRED_RECORDS:
+            quality_issues.append(f"Insufficient data: Only {valid_for_analysis} valid records found (minimum {MIN_REQUIRED_RECORDS} required for meaningful analysis)")
+
+        if data_completeness < MIN_COMPLETENESS_THRESHOLD:
+            quality_issues.append(f"Low data completeness: {data_completeness:.2f}% (minimum {MIN_COMPLETENESS_THRESHOLD}% required)")
+
+        if total_records == 0:
+            quality_issues.append("Empty dataset: No records provided")
+
+        all_issues = list(set(missing_analysis['issues'] + numeric_analysis['issues'] + quality_issues))
+
         return {
             'summary': {
                 'total_records': total_records,
                 'valid_records': valid_for_analysis,
                 'data_completeness': round(data_completeness, 2),
-                'ready_for_analysis': valid_for_analysis > 0
+                'ready_for_analysis': is_ready,
+                'min_required_records': MIN_REQUIRED_RECORDS,
+                'min_completeness_threshold': MIN_COMPLETENESS_THRESHOLD
             },
             'missing_values': {
                 'count': missing_analysis['missing_count'],
@@ -109,7 +150,7 @@ class DataValidator:
                 'indices': numeric_analysis['invalid_indices'],
                 'values': numeric_analysis['invalid_values']
             },
-            'issues': list(set(missing_analysis['issues'] + numeric_analysis['issues'])),
+            'issues': all_issues,
             'cleaned_data': numeric_analysis['valid_records']
         }
 
