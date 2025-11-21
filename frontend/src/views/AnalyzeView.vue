@@ -49,7 +49,7 @@ function analyzeData(vals: string[]) {
   loadingIcon.value = true;
   axios
     .get(
-      `https://benqual.onrender.com/api/benford_test/?data=[${values.value}]`
+      `/api/benford_test/?data=[${values.value}]`
     )
     .then((response) => {
       result.value = response.data;
@@ -99,7 +99,7 @@ async function analyzeFile() {
   try {
     loadingIconFile.value = true;
     const response = await axios.post(
-      'https://benqual.onrender.com/api/benford_test/upload/?file',
+      '/api/benford_test/upload/?file',
       formData.value,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
