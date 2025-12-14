@@ -6,15 +6,20 @@ class Utils:
     """Benford's Law utilities applied to all digits (0–9)"""
 
     def _extract_digits(self, data):
-        """Extract all digits from all numbers in the dataset"""
+        """Extract all digits from integer and fractional parts of numbers"""
         digits = []
         for value in data:
-            for d in str(abs(int(value))):
-                digits.append(int(d))
+            try:
+                # Convert to string, remove non-digit chars (like '.','-')
+                s = str(abs(float(value)))
+                for c in s:
+                    if c.isdigit():
+                        digits.append(int(c))
+            except:
+                continue
         return digits
 
     def count_digits(self, data):
-        """Count occurrences of digits 0–9"""
         counts = {i: 0 for i in range(10)}
         digits = self._extract_digits(data)
         for d in digits:
@@ -22,34 +27,25 @@ class Utils:
         return counts
 
     def get_expected_percentages(self):
-        """
-        Approximate expected percentages for digits 0–9
-        - Original Benford: 1-9 logarithmic
-        - Digit 0: assigned based on normalization
-        """
-        # Benford probabilities for digits 1–9
+        """Benford expected percentages for digits 0-9"""
         benford_probs = [np.log10(1 + 1/d) for d in range(1, 10)]
-        # Assign remaining to 0
-        prob_0 = 1 - sum(benford_probs)
+        prob_0 = max(0, 1 - sum(benford_probs))  # ensure non-negative
         expected = [prob_0] + benford_probs
         return {i: float(expected[i]) for i in range(10)}
 
     def get_p_value(self, data):
-        """Chi-square test against expected Benford percentages (safe from NaN)"""
+        """Chi-square test with all expected counts > 0"""
         observed_counts = self.count_digits(data)
         observed = list(observed_counts.values())
         total = sum(observed)
 
-        # Expected proportions from Benford
         expected_percentages = self.get_expected_percentages()
         expected = [expected_percentages[i] * total for i in range(10)]
 
-        # Fix: normalize expected counts to sum exactly to total
-        expected_total = sum(expected)
-        expected = [e * total / expected_total for e in expected]
+        # Ensure no zeros in expected counts (small datasets)
+        expected = [max(e, 1e-6) for e in expected]
 
-        # Chi-square test
-        chi2_stat, p_value = chisquare(observed, expected)
+        chi2_stat, p_value = chisquare(f_obs=observed, f_exp=expected)
         return float(p_value), float(chi2_stat)
 
     def get_ks_test(self, data):
