@@ -44,44 +44,24 @@ function analyzeData(vals: string[]) {
     return;
   }
 
-  values.value = vals.filter((v) => v !== '').map((v) => parseInt(v, 10));
+  values.value = vals.filter((v) => v !== '').map((v) => parseFloat(v));
 
   loadingIcon.value = true;
-  console.log('=== Sending data to backend ===');
-  console.log('Data:', values.value);
-  console.log('Data length:', values.value.length);
 
   axios
     .post(
       'https://benqual.onrender.com/api/benford_test/',
-      {
-        data: values.value,
-      },
-      {
-        headers: { 'Content-Type': 'application/json' },
-      }
+      { data: values.value },
+      { headers: { 'Content-Type': 'application/json' } }
     )
     .then((response) => {
-      console.log('=== Backend Response ===');
-      console.log('Full response:', response.data);
-      console.log('Status:', response.data.status);
-      console.log('Data Quality:', response.data.data_quality);
-      console.log('Missing Values:', response.data.missing_values);
-      console.log('Invalid Values:', response.data.invalid_values);
-      console.log('Issues:', response.data.issues);
-      console.log('Records Analyzed:', response.data.records_analyzed);
-
       result.value = response.data;
       loadingIcon.value = false;
       showResultBtn.value = true;
-      showFileResultBtn.value = false;
     })
     .catch((error) => {
-      console.error('=== Error occurred ===');
-      console.error('Error message:', error.message);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
       loadingIcon.value = false;
+      console.error(error);
     });
 }
 
