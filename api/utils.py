@@ -35,14 +35,18 @@ class Utils:
         return {i: float(expected[i]) for i in range(10)}
 
     def get_p_value(self, data):
-        """Chi-square test against expected Benford percentages"""
+        """Chi-square test against expected Benford percentages (safe from NaN)"""
         observed_counts = self.count_digits(data)
         observed = list(observed_counts.values())
         total = sum(observed)
+
+        # Use Benford expected percentages for all digits 0-9
         expected_percentages = self.get_expected_percentages()
-        expected = [total * expected_percentages[i] for i in range(10)]
+        expected = [max(total * expected_percentages[i], 1e-6)
+                    for i in range(10)]
+
         chi2_stat, p_value = chisquare(observed, expected)
-        return p_value, chi2_stat
+        return float(p_value), float(chi2_stat)
 
     def get_ks_test(self, data):
         """Kolmogorov–Smirnov test"""
