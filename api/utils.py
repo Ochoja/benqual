@@ -40,11 +40,15 @@ class Utils:
         observed = list(observed_counts.values())
         total = sum(observed)
 
-        # Use Benford expected percentages for all digits 0-9
+        # Expected proportions from Benford
         expected_percentages = self.get_expected_percentages()
-        expected = [max(total * expected_percentages[i], 1e-6)
-                    for i in range(10)]
+        expected = [expected_percentages[i] * total for i in range(10)]
 
+        # Fix: normalize expected counts to sum exactly to total
+        expected_total = sum(expected)
+        expected = [e * total / expected_total for e in expected]
+
+        # Chi-square test
         chi2_stat, p_value = chisquare(observed, expected)
         return float(p_value), float(chi2_stat)
 
