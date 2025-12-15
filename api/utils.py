@@ -34,31 +34,33 @@ class Utils:
         observed = np.array(list(observed_counts.values()), dtype=float)
         total = observed.sum()
 
+        if total == 0:
+            return 1.0, 0.0
+
         expected_probs = np.array(
             [self.get_expected_percentages()[d] for d in range(1, 10)]
         )
-
-        # Normalize expected probs
         expected_probs /= expected_probs.sum()
 
-        # Observed distance (L1)
+        # Observed chi-square–like statistic
         observed_probs = observed / total
-        observed_distance = np.sum(np.abs(observed_probs - expected_probs))
+        observed_stat = np.sum(
+            (observed_probs - expected_probs) ** 2 / expected_probs
+        )
 
         # Monte Carlo simulation
-        distances = []
-        for _ in range(simulations):
-            simulated = np.random.multinomial(
-                int(total), expected_probs
-            )
+        simulated_stats = np.zeros(simulations)
+        for i in range(simulations):
+            simulated = np.random.multinomial(int(total), expected_probs)
             sim_probs = simulated / total
-            dist = np.sum(np.abs(sim_probs - expected_probs))
-            distances.append(dist)
+            simulated_stats[i] = np.sum(
+                (sim_probs - expected_probs) ** 2 / expected_probs
+            )
 
-        # p-value: proportion worse than observed
-        p_value = np.mean(np.array(distances) >= observed_distance)
+        # Correct p-value
+        p_value = np.mean(simulated_stats >= observed_stat)
 
-        return float(p_value), float(observed_distance)
+        return float(p_value), float(observed_stat)
 
     def get_ks_test(self, data):
         observed_counts = self.count_digits(data)
