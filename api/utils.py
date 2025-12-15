@@ -29,15 +29,36 @@ class Utils:
         """Benford expected percentages for digits 1–9"""
         return {d: float(np.log10(1 + 1/d)) for d in range(1, 10)}
 
-    def get_p_value(self, data):
+    def get_p_value(self, data, simulations=5000):
         observed_counts = self.count_digits(data)
-        total_digits = sum(observed_counts.values())
-        expected_percentages = self.get_expected_percentages()
-        expected = [expected_percentages[d] *
-                    total_digits for d in range(1, 10)]
-        chi2_stat, p_value = chisquare(f_obs=list(
-            observed_counts.values()), f_exp=expected)
-        return float(p_value), float(chi2_stat)
+        observed = np.array(list(observed_counts.values()), dtype=float)
+        total = observed.sum()
+
+        expected_probs = np.array(
+            [self.get_expected_percentages()[d] for d in range(1, 10)]
+        )
+
+        # Normalize expected probs
+        expected_probs /= expected_probs.sum()
+
+        # Observed distance (L1)
+        observed_probs = observed / total
+        observed_distance = np.sum(np.abs(observed_probs - expected_probs))
+
+        # Monte Carlo simulation
+        distances = []
+        for _ in range(simulations):
+            simulated = np.random.multinomial(
+                int(total), expected_probs
+            )
+            sim_probs = simulated / total
+            dist = np.sum(np.abs(sim_probs - expected_probs))
+            distances.append(dist)
+
+        # p-value: proportion worse than observed
+        p_value = np.mean(np.array(distances) >= observed_distance)
+
+        return float(p_value), float(observed_distance)
 
     def get_ks_test(self, data):
         observed_counts = self.count_digits(data)
