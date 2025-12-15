@@ -42,13 +42,13 @@ class Utils:
         )
         expected_probs /= expected_probs.sum()
 
-        # Observed chi-square–like statistic
+        # Observed statistic (chi-square style)
         observed_probs = observed / total
         observed_stat = np.sum(
             (observed_probs - expected_probs) ** 2 / expected_probs
         )
 
-        # Monte Carlo simulation
+        # Monte Carlo distribution
         simulated_stats = np.zeros(simulations)
         for i in range(simulations):
             simulated = np.random.multinomial(int(total), expected_probs)
@@ -57,8 +57,9 @@ class Utils:
                 (sim_probs - expected_probs) ** 2 / expected_probs
             )
 
-        # Correct p-value
-        p_value = np.mean(simulated_stats >= observed_stat)
+        # Percentile-based p-value (FIX)
+        percentile = np.mean(simulated_stats <= observed_stat)
+        p_value = 1 - abs(percentile - 0.5) * 2
 
         return float(p_value), float(observed_stat)
 
